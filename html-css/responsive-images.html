@@ -1,0 +1,31 @@
+<!-- 1. Art direction & cropping -->
+
+<picture>
+    <source srcset="images/crop-large.jpg" media="(min-width: 1200px)">
+    <source srcset="images/crop-medium.jpg" media="(min-width: 760px)">
+    <img src="images/crop-small.jpg" alt="A cool image">
+</picture>
+
+<!-- 2. Image resolution & file size -->
+
+<img srcset="images/smallest.jpg 368w,
+             images/small.jpg 730w,
+             images/medium.jpg 1200w,
+             images/large.jpg 1920w"
+     alt="A cool image">
+
+<!-- 2b. Image resolution & file size for image not taking up 100% of screen -->
+<img sizes="160px"
+     srcset="images/picture.jpg 160w,
+            images/picture-hi-dpi.jpg 320w"
+     alt="A cool image">
+
+<!-- 1 + 2 -->
+
+<picture>
+    <source sizes="(at this size) this is the largest it will ever need to be; or go 100vw" srcset="path/image.jpg pixel_w, path/image-hi-res.jpg pixel_wx2" media="query for when to use this image source">
+    <source sizes="(min-width: 1200px) 1920px, 100vw" srcset="images/crop-large.jpg 1920w, images/crop-large-hi-dpi.jpg 3840w" media="(min-width: 1200px)">
+    <source sizes="(min-width: 900px) 1380px, 100vw" srcset="images/crop-medium.jpg 1380w, images/crop-medium-hi-dpi.jpg 2760w" media="(min-width: 900px)">
+    <source srcset="images/crop-medium.jpg 990w, images/crop-medium-hi-dpi.jpg 1980w" media="(min-width: 640px)">
+    <img srcset="images/crop-smallest.jpg 640w, images/crop-smallest-hi-dpi.jpg 1280w" alt="A cool image">
+</picture>

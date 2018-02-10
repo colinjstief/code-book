@@ -1,0 +1,9 @@
+node_modules/
+docs
+_reference
+bash/*
+!bash/git.sh
+!bash/renaming-file.sh
+!bash/unix.sh
+.vscode
+.DS_Store

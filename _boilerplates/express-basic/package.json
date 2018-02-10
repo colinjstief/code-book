@@ -1,0 +1,39 @@
+{
+  "name": "express-basic-boilerplate",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    // This is for Heroku
+    "start": "node server/server.js",
+    "build": "webpack --watch",
+    "test": "export NODE_ENV=test || \"SET NODE_ENV=test\" && mocha server/**/*.test.js",
+    "test-watch": "nodemon --exec \"npm test\""
+  },
+  "author": "Colin Stief",
+  "license": "ISC",
+  "dependencies": {
+    // express -- server
+    "express": "^4.15.4",
+    // lodash -- js utiliy functions
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    // babel-cli -- run from command line
+    // babel-core -- run from tools like Webpack
+    // babel-loader -- teach Webpack how to look for files
+    // babel-preset-env -- latest Babel presets; includes ES 15/16/17
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.0",
+    // nodemon -- watch for changes
+    "nodemon": "^1.12.1",
+    // webpack -- bundling tool
+    "webpack": "^3.6.0"
+  },
+  // Specify engine for services like Heroku
+  "engines": {
+    "node": "8.2.1"
+  }
+}
