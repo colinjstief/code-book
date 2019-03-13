@@ -1,0 +1,83 @@
+---
+title: "Basic - Chunk Options"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Run code and show it...
+
+### ...and collpase everything into one block
+#### ```{r collapse = TRUE}```
+```{r collapse = TRUE}
+print(10 + 10)
+warning("Warning!")
+message("This is a message")
+```
+
+### ...but not output
+#### ```{r echo = TRUE, results = "hide"}```
+```{r echo = TRUE, results = "hide"}
+print(10 + 10)
+```
+
+### ...but not warnings
+#### ```{r warning = FALSE}```
+```{r warning = FALSE}
+warning("Warning!")
+```
+
+### ...but not messages
+#### ```{r message = FALSE}```
+```{r message = FALSE}
+message("This is a message")
+```
+
+<span style="
+  display: inline-block;
+  height: 25px;
+  width: 100%;
+"></span>
+
+## Run code and hide it...
+#### ```{r include = FALSE}```
+```{r include = FALSE}
+x <- 10
+print(x)
+```
+The value of variable `x`, calculated above in the hidden chunk: `r  x`
+<span style="
+  display: inline-block;
+  height: 25px;
+  width: 100%;
+"></span>
+
+## Don't run code and show it...
+#### ```{r eval = FALSE}```
+```{r eval = FALSE}
+print(10 + 10)
+```
+
+<span style="
+  display: inline-block;
+  height: 25px;
+  width: 100%;
+"></span>
+
+## Don't run code and hide it...
+#### ```{r eval = FALSE, include = FALSE}```
+```{r eval = FALSE, include = FALSE}
+print(10 + 10)
+```
+
+<span style="
+  display: inline-block;
+  height: 100px;
+  width: 100%;
+"></span>
+
+
+
+
+
+

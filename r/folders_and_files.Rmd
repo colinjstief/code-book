@@ -1,0 +1,55 @@
+---
+title: "Basic - Folders and Files"
+output:
+  html_document:
+    df_print: paged
+editor_options: 
+  chunk_output_type: console
+---
+
+### Setup
+#### Specify folder for Windows and Mac
+```{r}
+if (.Platform.type == "windows") {
+  stop("Please define your directory for Windows, then delete this line.")
+  # baseDir <- "G:\Team Drives\WSO USA - Projects\000 - Project"
+} else {
+  stop("Please define your directory for Mac, then delete this line.")
+  # baseDir <- "/Volumes/GoogleDrive/Team Drives/WSO USA - Projects/000 - Project"
+}
+```
+
+### List
+#### List files in folder
+```{r}
+
+```
+
+#### List files in folder by pattern
+```{r}
+
+```
+
+### Loop
+#### Loop through files in folder
+```{r}
+
+```
+
+### Loop
+#### Loop through files in folder by pattern
+```{r}
+
+```
+
+<span style="
+  display: inline-block;
+  height: 100px;
+  width: 100%;
+"></span>
+
+
+
+
+
+
