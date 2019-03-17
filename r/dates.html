@@ -215,10 +215,29 @@ $(document).ready(function () {
 <li><a href="#common-tasks">Common Tasks</a></li>
 </ul></li>
 </ul></li>
-<li><a href="#printing">Printing</a><ul>
+<li><a href="#datetimes">Datetimes</a><ul>
+<li><a href="#defining-1">Defining</a><ul>
+<li><a href="#strings-1">Strings</a></li>
+<li><a href="#components-1">Components</a></li>
+<li><a href="#utilities-1">Utilities</a></li>
+</ul></li>
+<li><a href="#importing-1">Importing</a><ul>
+<li><a href="#csv-1">CSV</a></li>
+<li><a href="#excel-1">Excel</a></li>
+</ul></li>
+<li><a href="#calculating-1">Calculating</a><ul>
+<li><a href="#rounding-1">Rounding</a></li>
+<li><a href="#adjusting-in-calendar-time-1">Adjusting in calendar time</a></li>
+<li><a href="#adjusting-in-physical-time-1">Adjusting in physical time</a></li>
+<li><a href="#classes-for-storing-time-difference-1">Classes for storing time difference</a></li>
+<li><a href="#calculating-time-difference-1">Calculating time difference</a></li>
+<li><a href="#extracting-components-1">Extracting Components</a></li>
+<li><a href="#common-tasks-1">Common Tasks</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#formatting-for-labels">Formatting for labels</a><ul>
 <li><a href="#common">Common</a></li>
 <li><a href="#advanced-labels">Advanced Labels</a></li>
-<li><a href="#base-r">Base R</a></li>
 </ul></li>
 </ul>
 </div>
@@ -250,13 +269,18 @@ dataDir &lt;- file.path(baseDir, &quot;_data&quot;)</code></pre>
 <h2>Defining</h2>
 <div id="strings" class="section level3">
 <h3>Strings</h3>
-<pre class="r"><code># Most flexible
-as_date(&quot;2011-06-04&quot;)
+<pre class="r"><code>as_date(&quot;2011-06-04&quot;)
 ## [1] &quot;2011-06-04&quot;
 as_date(&quot;June.4.11&quot;, format = &quot;%B.%d.%y&quot;, tz = &quot;&quot;) 
 ## [1] &quot;2011-06-04&quot;
 as_date(&quot;2011-06-04&quot;) %&gt;% str()
 ##  Date[1:1], format: &quot;2011-06-04&quot;
+
+# This is the most flexible because you can give it multiple formats
+as_date(parse_date_time(&quot;2011-06-04&quot;, &quot;%Y-%m-%d&quot;))
+## [1] &quot;2011-06-04&quot;
+as_date(parse_date_time(c(&quot;2011-06-04&quot;, &quot;June.4.11&quot;), c(&quot;%Y-%m-%d&quot;, &quot;%B.%d.%y&quot;)))
+## [1] &quot;2011-06-04&quot; &quot;2011-06-04&quot;
 
 # Shortcuts
 ymd(&quot;2011-06-04&quot;)
@@ -273,6 +297,8 @@ parse_date(&quot;2011-06-04&quot;)
 ## [1] &quot;2011-06-04&quot;
 parse_date(&quot;June.4.11&quot;, format = &quot;%B.%d.%y&quot;) 
 ## [1] &quot;2011-06-04&quot;
+parse_date(&quot;2011-06-04&quot;) %&gt;% str()
+##  Date[1:1], format: &quot;2011-06-04&quot;
 
 # Compare to Base R
 # Normal date
@@ -322,11 +348,11 @@ as.Date(paste(2011, match(&quot;June&quot;, month.name), 4, sep = &quot;-&quot;)
 <h3>Utilities</h3>
 <pre class="r"><code>## Get today's date
 today()
-## [1] &quot;2019-03-13&quot;
+## [1] &quot;2019-03-16&quot;
 
 # Compare to Base R
 Sys.Date()
-## [1] &quot;2019-03-13&quot;</code></pre>
+## [1] &quot;2019-03-16&quot;</code></pre>
 </div>
 </div>
 <div id="importing" class="section level2 tabset tabset-fade">
@@ -406,54 +432,17 @@ mixedDatesCSV &lt;- read_csv(file.path(dataDir, &quot;dates-mixed.csv&quot;),
   )
 )
 
-## ... then try to parse your dates with a case_when syntax. Warning, you will see warnings, so you
-## need to spot check the results to make sure the dates were parsed correctly.
+## ...then try to parse your dates with a case_when syntax.
 
 mixedDatesCSV &lt;- mixedDatesCSV %&gt;%
   mutate(
     date = case_when(
-      !is.na(parse_date(date, &quot;%m.%d.%Y&quot;)) ~ parse_date(date, &quot;%m.%d.%Y&quot;),
-      !is.na(parse_date(date, &quot;%m/%d/%y&quot;)) ~ parse_date(date, &quot;%m/%d/%y&quot;),
+      !is.na(as_date(date, &quot;%m.%d.%Y&quot;, tz = &quot;&quot;)) ~ as_date(date, &quot;%m.%d.%Y&quot;, tz = &quot;&quot;),
+      !is.na(as_date(date, &quot;%m/%d/%y&quot;, tz = &quot;&quot;)) ~ as_date(date, &quot;%m/%d/%y&quot;, tz = &quot;&quot;),
       TRUE ~ as_date(as.numeric(date), origin = &quot;1899-12-30&quot;)
+      # TRUE ~ as_date(as.numeric(date), origin = &quot;1904-01-01&quot;)
     )
   )
-## Warning: 14 parsing failures.
-## row col           expected actual
-##   1  -- date like %m.%d.%Y 43015 
-##   3  -- date like %m.%d.%Y 6/6/17
-##   4  -- date like %m.%d.%Y 42905 
-##   5  -- date like %m.%d.%Y 42242 
-##   6  -- date like %m.%d.%Y 42567 
-## ... ... .................. ......
-## See problems(...) for more details.
-## Warning: 14 parsing failures.
-## row col           expected actual
-##   1  -- date like %m.%d.%Y 43015 
-##   3  -- date like %m.%d.%Y 6/6/17
-##   4  -- date like %m.%d.%Y 42905 
-##   5  -- date like %m.%d.%Y 42242 
-##   6  -- date like %m.%d.%Y 42567 
-## ... ... .................. ......
-## See problems(...) for more details.
-## Warning: 13 parsing failures.
-## row col           expected    actual
-##   1  -- date like %m/%d/%y 43015    
-##   2  -- date like %m/%d/%y 9.17.2016
-##   4  -- date like %m/%d/%y 42905    
-##   5  -- date like %m/%d/%y 42242    
-##   6  -- date like %m/%d/%y 42567    
-## ... ... .................. .........
-## See problems(...) for more details.
-
-## Warning: 13 parsing failures.
-## row col           expected    actual
-##   1  -- date like %m/%d/%y 43015    
-##   2  -- date like %m/%d/%y 9.17.2016
-##   4  -- date like %m/%d/%y 42905    
-##   5  -- date like %m/%d/%y 42242    
-##   6  -- date like %m/%d/%y 42567    
-## ... ... .................. .........
-## See problems(...) for more details.
 ## Warning in as_date(as.numeric(date), origin = &quot;1899-12-30&quot;): NAs introduced
 ## by coercion
 
@@ -464,7 +453,42 @@ mixedDatesCSV[1:3,]</code></pre>
   </script>
 </div>
 <p><strong>Base R</strong></p>
-<pre class="r"><code># @TODO read.csv</code></pre>
+<pre class="r"><code># grade  class   date
+# A      2       10/7/17
+# A      1       2/11/15
+# D      1       11/3/17
+
+## Fails initial import
+simpleDatesCSVR &lt;- read.csv(file.path(dataDir, &quot;dates-simple.csv&quot;), 
+  header = TRUE,
+  colClasses = c(
+    &quot;character&quot;, 
+    &quot;numeric&quot;, 
+    &quot;Date&quot;
+  )
+)
+
+## Try again, but bring in the date column as a character...
+simpleDatesCSVR &lt;- read.csv(file.path(dataDir, &quot;dates-simple.csv&quot;), 
+  header = TRUE,
+  colClasses = c(
+    &quot;character&quot;, 
+    &quot;numeric&quot;, 
+    &quot;character&quot;
+  )
+)
+
+simpleDatesCSVR &lt;- simpleDatesCSVR %&gt;%
+  mutate(
+    date = as.Date(date, &quot;%m/%d/%y&quot;)
+  )
+
+simpleDatesCSVR[1:3,]</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["grade"],"name":[1],"type":["chr"],"align":["left"]},{"label":["class"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["date"],"name":[3],"type":["date"],"align":["right"]}],"data":[{"1":"A","2":"2","3":"2017-10-07","_rn_":"1"},{"1":"A","2":"1","3":"2015-02-11","_rn_":"2"},{"1":"D","2":"1","3":"2017-11-03","_rn_":"3"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 </div>
 <div id="excel" class="section level3">
 <h3>Excel</h3>
@@ -482,7 +506,7 @@ simpleDatesXL &lt;- read_excel(file.path(dataDir, &quot;dates-simple.xlsx&quot;)
   )
 )
  
-# Comes out as date time, so need to coerce
+# Comes out as date time, so need to coerce.
 simpleDatesXL &lt;- simpleDatesXL %&gt;%
   mutate(
     date = as_date(date)
@@ -570,54 +594,17 @@ mixedDatesXL &lt;- read_excel(file.path(dataDir, &quot;dates-mixed.xlsx&quot;),
   )
 )
 
-## ... then try to parse your dates with a case_when syntax. Warning, you will see warnings, so you
-## need to spot check the results to make sure the dates were parsed correctly.
+## ...then try to parse your dates with a case_when syntax.
 
 mixedDatesXL &lt;- mixedDatesXL %&gt;%
   mutate(
     date = case_when(
-      !is.na(parse_date(date, &quot;%m.%d.%Y&quot;)) ~ parse_date(date, &quot;%m.%d.%Y&quot;),
-      !is.na(parse_date(date, &quot;%m/%d/%y&quot;)) ~ parse_date(date, &quot;%m/%d/%y&quot;),
+      !is.na(as_date(date, &quot;%m.%d.%Y&quot;, tz = &quot;&quot;)) ~ as_date(date, &quot;%m.%d.%Y&quot;, tz = &quot;&quot;),
+      !is.na(as_date(date, &quot;%m/%d/%y&quot;, tz = &quot;&quot;)) ~ as_date(date, &quot;%m/%d/%y&quot;, tz = &quot;&quot;),
       TRUE ~ as_date(as.numeric(date), origin = &quot;1899-12-30&quot;)
+      # TRUE ~ as_date(as.numeric(date), origin = &quot;1904-01-01&quot;)
     )
   )
-## Warning: 14 parsing failures.
-## row col           expected actual
-##   1  -- date like %m.%d.%Y  43015
-##   3  -- date like %m.%d.%Y  42892
-##   4  -- date like %m.%d.%Y  42905
-##   5  -- date like %m.%d.%Y  42242
-##   6  -- date like %m.%d.%Y  42567
-## ... ... .................. ......
-## See problems(...) for more details.
-## Warning: 14 parsing failures.
-## row col           expected actual
-##   1  -- date like %m.%d.%Y  43015
-##   3  -- date like %m.%d.%Y  42892
-##   4  -- date like %m.%d.%Y  42905
-##   5  -- date like %m.%d.%Y  42242
-##   6  -- date like %m.%d.%Y  42567
-## ... ... .................. ......
-## See problems(...) for more details.
-## Warning: 20 parsing failures.
-## row col           expected    actual
-##   1  -- date like %m/%d/%y 43015    
-##   2  -- date like %m/%d/%y 9.17.2016
-##   3  -- date like %m/%d/%y 42892    
-##   4  -- date like %m/%d/%y 42905    
-##   5  -- date like %m/%d/%y 42242    
-## ... ... .................. .........
-## See problems(...) for more details.
-
-## Warning: 20 parsing failures.
-## row col           expected    actual
-##   1  -- date like %m/%d/%y 43015    
-##   2  -- date like %m/%d/%y 9.17.2016
-##   3  -- date like %m/%d/%y 42892    
-##   4  -- date like %m/%d/%y 42905    
-##   5  -- date like %m/%d/%y 42242    
-## ... ... .................. .........
-## See problems(...) for more details.
 ## Warning in as_date(as.numeric(date), origin = &quot;1899-12-30&quot;): NAs introduced
 ## by coercion
 
@@ -627,8 +614,6 @@ mixedDatesXL[1:3,]</code></pre>
 {"columns":[{"label":["grade"],"name":[1],"type":["chr"],"align":["left"]},{"label":["class"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["date"],"name":[3],"type":["date"],"align":["right"]}],"data":[{"1":"A","2":"2","3":"2017-10-07"},{"1":"A","2":"1","3":"2016-09-17"},{"1":"D","2":"1","3":"2017-06-06"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-<p><strong>Base R</strong></p>
-<pre class="r"><code># @TODO read.xlsx</code></pre>
 </div>
 </div>
 <div id="calculating" class="section level2 tabset tabset-fade">
@@ -753,16 +738,23 @@ enterDST_later &lt;- as_date(&quot;2019-03-11&quot;) # from 2019-03-09
 exitDST_later &lt;- as_date(&quot;2019-11-04&quot;) # from 2019-11-02
 
 # (1) Difftime -&gt; Base R class in undetermined units (below gives us days)
-normalDate_later - normalDate %&gt;% str()
-##  Date[1:1], format: &quot;2014-02-28&quot;
-## Date of length 0
+# The units can change depending on the dates/times used
+(normalDate_later - normalDate) %&gt;% str()
+##  'difftime' num 2
+##  - attr(*, &quot;units&quot;)= chr &quot;days&quot;
+difftime(normalDate_later, normalDate) %&gt;% str() # Longhand version, but notice that end date comes first, which is strange to me
+##  'difftime' num 2
+##  - attr(*, &quot;units&quot;)= chr &quot;days&quot;
 
 # (2) Duration -&gt; Lubridate class in seconds
+# Basically the same as difftime, but never changes from seconds.
 as.duration(normalDate_later - normalDate) %&gt;% str()
 ## Formal class 'Duration' [package &quot;lubridate&quot;] with 1 slot
 ##   ..@ .Data: num 172800
 
 # (3) Interval -&gt; Lubridate class that stores two dates in one
+# Can use several utitliy functions specific to this class for determining relationships
+# between dates (e.g. %within%)
 interval(normalDate, normalDate_later) %&gt;% str()
 ## Formal class 'Interval' [package &quot;lubridate&quot;] with 3 slots
 ##   ..@ .Data: num 172800
@@ -772,8 +764,8 @@ interval(normalDate, normalDate_later) %&gt;% str()
 <div id="calculating-time-difference" class="section level3">
 <h3>Calculating time difference</h3>
 <pre class="r"><code>## Difftime ------------------------------------------------------------------------------
-time_length(normalDate_later - normalDate, &quot;second&quot;)
-## [1] 172800
+
+# Shorthand
 (normalDate_later - normalDate) %&gt;% time_length(&quot;second&quot;)
 ## [1] 172800
 (normalDate_later - normalDate) %&gt;% time_length(&quot;minute&quot;)
@@ -791,6 +783,11 @@ time_length(normalDate_later - normalDate, &quot;second&quot;)
 ## [1] 2
 (exitDST_later - exitDST) %&gt;% time_length(&quot;day&quot;)
 ## [1] 2
+
+# Longhand
+difftime(normalDate, normalDate_later) %&gt;% str()
+##  'difftime' num -2
+##  - attr(*, &quot;units&quot;)= chr &quot;days&quot;
 
 ## Durations ------------------------------------------------------------------------------
 as.duration(normalDate_later - normalDate) %&gt;% time_length(&quot;second&quot;)
@@ -922,20 +919,776 @@ auditEnd %m+% months(2)
 <p><strong>Create a sequence of dates</strong></p>
 <pre class="r"><code>testStart &lt;- as_date(&quot;2016-02-01&quot;) # Notice this is a leap year
 testEnd &lt;- as_date(&quot;2017-04-30&quot;)</code></pre>
-<p><strong>Plot event in month, regarldess of year</strong></p>
+<p><strong>Plot event in month, regardles of year</strong></p>
 </div>
 </div>
 </div>
-<div id="printing" class="section level1 tabset tabset-fade">
-<h1>Printing</h1>
+<div id="datetimes" class="section level1">
+<h1>Datetimes</h1>
+<div id="defining-1" class="section level2 tabset tabset-fade">
+<h2>Defining</h2>
+<div id="strings-1" class="section level3">
+<h3>Strings</h3>
+<pre class="r"><code>as_datetime(&quot;2011-06-04 11:30:00&quot;)
+## [1] &quot;2011-06-04 11:30:00 UTC&quot;
+as_datetime(&quot;2011-06-04 11:30:00&quot;, tz = &quot;America/Los_Angeles&quot;)
+## [1] &quot;2011-06-04 11:30:00 PDT&quot;
+as_datetime(&quot;June/4/11 11:30 PM&quot;, format = &quot;%B/%d/%y %I:%M %p&quot;)
+## [1] &quot;2011-06-04 23:30:00 UTC&quot;
+as_datetime(&quot;2011-06-04 11:30:00&quot;) %&gt;% str()
+##  POSIXct[1:1], format: &quot;2011-06-04 11:30:00&quot;
+as_datetime(&quot;June/4/11 11:30&quot;, format = &quot;%B/%d/%y %I:%M&quot;) %&gt;% str() # This is POSIXlt... not sure why right now
+##  POSIXlt[1:1], format: &quot;2011-06-04 11:30:00&quot;
+as_datetime(&quot;2011-06-04 11:30:00&quot;) %&gt;% tz() # Defaults to POSIXct in UTC
+## [1] &quot;UTC&quot;
+
+# Shortcuts
+ymd_hms(&quot;2010-08-03 12:00:00&quot;)
+## [1] &quot;2010-08-03 12:00:00 UTC&quot;
+mdy_hms(&quot;06042011 12:00:00&quot;, tz = &quot;America/Los_Angeles&quot;)
+## [1] &quot;2011-06-04 12:00:00 PDT&quot;
+dmy_hm(&quot;04/06/2011 12:00&quot;)
+## [1] &quot;2011-06-04 12:00:00 UTC&quot;
+dmy_h(&quot;04/06/2011 12&quot;)
+## [1] &quot;2011-06-04 12:00:00 UTC&quot;
+ymd_hms(&quot;2010-08-03 12:00:00&quot;) %&gt;% str()
+##  POSIXct[1:1], format: &quot;2010-08-03 12:00:00&quot;
+ymd_hms(&quot;2010-08-03 12:00:00&quot;) %&gt;% tz()
+## [1] &quot;UTC&quot;
+
+parse_date_time(&quot;2011-06-04 11:30:00&quot;, &quot;%Y-%m-%d $H:%M:%S&quot;) 
+## [1] &quot;2011-06-04 11:30:00 UTC&quot;
+parse_date_time(c(&quot;2011-06-04 11:30:00&quot;, &quot;June/4/11 11:30 PM&quot;), orders = c(&quot;%Y-%m-%d $H:%M:%S&quot;, &quot;%B/%d/%y %I:%M %p&quot;), tz = &quot;America/Los_Angeles&quot;)
+## [1] &quot;2011-06-04 11:30:00 PDT&quot; &quot;2011-06-04 23:30:00 PDT&quot;
+parse_date_time(&quot;2011-06-04 11:30:00&quot;, &quot;%Y-%m-%d $H:%M:%S&quot;) %&gt;% str()
+##  POSIXct[1:1], format: &quot;2011-06-04 11:30:00&quot;
+parse_date_time(&quot;2011-06-04 11:30:00&quot;, &quot;%Y-%m-%d $H:%M:%S&quot;) %&gt;% tz()
+## [1] &quot;UTC&quot;
+parse_date_time(&quot;2011-06-04 11:30:00&quot;, &quot;%Y-%m-%d $H:%M:%S&quot;, tz = &quot;America/Los_Angeles&quot;) %&gt;% tz()
+## [1] &quot;America/Los_Angeles&quot;
+
+# Not Lubridate, but still from tidyverse (readr)
+parse_datetime(&quot;2011-06-04 11:30:00&quot;) 
+## [1] &quot;2011-06-04 11:30:00 UTC&quot;
+parse_datetime(&quot;2011-06-04 11:30:00&quot;, locale = locale(tz = &quot;America/Los_Angeles&quot;)) 
+## [1] &quot;2011-06-04 11:30:00 PDT&quot;
+parse_datetime(&quot;June/4/11 11:30 PM&quot;, format = &quot;%B/%d/%y %I:%M %p&quot;) 
+## [1] &quot;2011-06-04 23:30:00 UTC&quot;
+parse_datetime(&quot;2011-06-04 11:30:00&quot;) %&gt;% str() # Defaults to POSIXct
+##  POSIXct[1:1], format: &quot;2011-06-04 11:30:00&quot;
+parse_datetime(&quot;2011-06-04 11:30:00&quot;) %&gt;% tz() # Defaults to UTC
+## [1] &quot;UTC&quot;
+
+# Compare to Base R
+as.POSIXct(&quot;2011-06-04 11:30:00&quot;) # Notice PDT (my computer's time zone)
+## [1] &quot;2011-06-04 11:30:00 PDT&quot;
+as.POSIXct(&quot;2011-06-04 11:30:00&quot;, tz = &quot;UTC&quot;)
+## [1] &quot;2011-06-04 11:30:00 UTC&quot;
+as.POSIXct(&quot;2011-06-04 11:30:00&quot;, tz = &quot;America/Los_Angeles&quot;)
+## [1] &quot;2011-06-04 11:30:00 PDT&quot;
+as.POSIXct(&quot;June/4/11 11:30 PM&quot;, format = &quot;%B/%d/%y %I:%M %p&quot;) 
+## [1] &quot;2011-06-04 23:30:00 PDT&quot;
+as.POSIXct(&quot;June/4/11 11:30 PM&quot;, tryFormats = c(&quot;%B/%d/%y %I:%M %p&quot;, &quot;%B/%d/%y %I:%M %p&quot;))
+## [1] &quot;2011-06-04 23:30:00 PDT&quot;
+as.POSIXct(&quot;2011-06-04 11:30:00&quot;) %&gt;% str()
+##  POSIXct[1:1], format: &quot;2011-06-04 11:30:00&quot;
+as.POSIXct(&quot;2011-06-04 11:30:00&quot;) %&gt;% tz() # Does not have a timezone set
+## [1] &quot;&quot;
+
+as.POSIXlt(&quot;2011-06-04 11:30:00&quot;) # Notice PDT (my computer's time zone)
+## [1] &quot;2011-06-04 11:30:00 PDT&quot;
+as.POSIXlt(&quot;2011-06-04 11:30:00&quot;, tz = &quot;UTC&quot;)
+## [1] &quot;2011-06-04 11:30:00 UTC&quot;
+as.POSIXlt(&quot;2011-06-04 11:30:00&quot;, tz = &quot;America/Los_Angeles&quot;)
+## [1] &quot;2011-06-04 11:30:00 PDT&quot;
+as.POSIXlt(&quot;June/4/11 11:30 PM&quot;, format = &quot;%B/%d/%y %I:%M %p&quot;) 
+## [1] &quot;2011-06-04 23:30:00 PDT&quot;
+as.POSIXlt(&quot;June/4/11 11:30 PM&quot;, tryFormats = c(&quot;%B/%d/%y %I:%M %p&quot;, &quot;%B/%d/%y %I:%M %p&quot;))
+## [1] &quot;2011-06-04 23:30:00 PDT&quot;
+as.POSIXlt(&quot;2011-06-04 11:30:00&quot;) %&gt;% str()
+##  POSIXlt[1:1], format: &quot;2011-06-04 11:30:00&quot;
+as.POSIXlt(&quot;2011-06-04 11:30:00&quot;) %&gt;% tz() # Does not have a timezone set
+## [1] &quot;UTC&quot;
+
+strptime(&quot;2011-06-04 11:30:00&quot;, format = &quot;%Y-%m-%d %I:%M:%S&quot;) # Notice PDT (my computer's time zone)
+## [1] &quot;2011-06-04 11:30:00 PDT&quot;
+strptime(&quot;2011-06-04 11:30:00&quot;, format = &quot;%Y-%m-%d %I:%M:%S&quot;, tz = &quot;UTC&quot;)
+## [1] &quot;2011-06-04 11:30:00 UTC&quot;
+strptime(&quot;2011-06-04 11:30:00&quot;, format = &quot;%Y-%m-%d %I:%M:%S&quot;, tz = &quot;America/Los_Angeles&quot;)
+## [1] &quot;2011-06-04 11:30:00 PDT&quot;
+strptime(&quot;June/4/11 11:30 PM&quot;, format = &quot;%B/%d/%y %I:%M %p&quot;)
+## [1] &quot;2011-06-04 23:30:00 PDT&quot;
+strptime(&quot;2011-06-04 11:30:00&quot;, format = &quot;%Y-%m-%d %I:%M:%S&quot;) %&gt;% str() # Creates POSIXlt
+##  POSIXlt[1:1], format: &quot;2011-06-04 11:30:00&quot;
+strptime(&quot;2011-06-04 11:30:00&quot;, format = &quot;%Y-%m-%d %I:%M:%S&quot;) %&gt;% attr(&quot;tzone&quot;) # But this is null
+## NULL
+strptime(&quot;2011-06-04 11:30:00&quot;, format = &quot;%Y-%m-%d %I:%M:%S&quot;) %&gt;% tz() # UTC
+## [1] &quot;UTC&quot;
+## So we get a print of PDT, a NULL time zone attribute, and lubridate is telling us UTC...
+## Takeaway... specify the time zone to avoid ambiguity 
+
+# Invalid datetime
+as_datetime(&quot;2011-02-29 11:30:00&quot;, format = &quot;%Y-%m-%d %I:%M:%S&quot;)
+## [1] NA
+as.POSIXct(&quot;2011-02-29 11:30:00&quot;, format = &quot;%Y-%m-%d %I:%M:%S&quot;)
+## [1] NA
+as.POSIXlt(&quot;2011-02-29 11:30:00&quot;, format = &quot;%Y-%m-%d %I:%M:%S&quot;)
+## [1] NA
+strptime(&quot;2011-02-29 11:30:00&quot;, format = &quot;%Y-%m-%d %I:%M:%S&quot;)
+## [1] NA</code></pre>
+</div>
+<div id="components-1" class="section level3">
+<h3>Components</h3>
+<pre class="r"><code># Standard (i.e. uses integers)
+make_datetime(2011, 6, 2, 1, 1, 1)
+## [1] &quot;2011-06-02 01:01:01 UTC&quot;
+make_datetime(2011, 6, 2, 00, 00, 00)
+## [1] &quot;2011-06-02 UTC&quot;
+make_datetime(2011, 6, 2, 00, 00, 00, tz = &quot;UTC&quot;)
+## [1] &quot;2011-06-02 UTC&quot;
+make_datetime(2011, 6, 2, 00, 00, 00, tz = &quot;America/Los_Angeles&quot;)
+## [1] &quot;2011-06-02 PDT&quot;
+make_datetime(2011, 6, 2, 1, 1, 1) %&gt;% str()
+##  POSIXct[1:1], format: &quot;2011-06-02 01:01:01&quot;
+
+# Need to parse from string
+make_datetime(2011, match(&quot;Jun&quot;, month.abb), 4, 12, 30, 0)
+## [1] &quot;2011-06-04 12:30:00 UTC&quot;
+make_datetime(2011, match(&quot;June&quot;, month.name), 4, 12, 30, 00)
+## [1] &quot;2011-06-04 12:30:00 UTC&quot;
+make_datetime(2011, match(&quot;Jun&quot;, month.abb), 4, 12, 30, 0) %&gt;% str()
+##  POSIXct[1:1], format: &quot;2011-06-04 12:30:00&quot;
+
+# Compare to Base R
+as.POSIXct(paste(paste(&quot;2011&quot;, &quot;06&quot;, &quot;04&quot;, sep = &quot;-&quot;), paste(&quot;12&quot;, &quot;30&quot;, &quot;00&quot;, sep = &quot;:&quot;)))
+## [1] &quot;2011-06-04 12:30:00 PDT&quot;
+as.POSIXct(paste(paste(2011, 6, 4, sep = &quot;-&quot;), paste(12, 30, 00, sep = &quot;:&quot;)))
+## [1] &quot;2011-06-04 12:30:00 PDT&quot;
+as.POSIXct(paste(paste(&quot;2011&quot;, &quot;06&quot;, &quot;04&quot;, sep = &quot;-&quot;), paste(&quot;12&quot;, &quot;30&quot;, &quot;00&quot;, sep = &quot;:&quot;))) %&gt;% str()
+##  POSIXct[1:1], format: &quot;2011-06-04 12:30:00&quot;</code></pre>
+</div>
+<div id="utilities-1" class="section level3">
+<h3>Utilities</h3>
+<pre class="r"><code>## Get today's date
+now() # Local time zone
+## [1] &quot;2019-03-16 18:32:55 PDT&quot;
+now(&quot;UTC&quot;)
+## [1] &quot;2019-03-17 01:32:55 UTC&quot;
+
+# Compare to Base R
+Sys.time()
+## [1] &quot;2019-03-16 18:32:55 PDT&quot;</code></pre>
+</div>
+</div>
+<div id="importing-1" class="section level2 tabset tabset-fade">
+<h2>Importing</h2>
+<div id="csv-1" class="section level3">
+<h3>CSV</h3>
+<p><strong>Basic</strong></p>
+<pre class="r"><code># category   temp    datetime
+# cool       55      2011-06-04 09:30:00
+# warm       60      2011-06-05 09:30:01
+# warm       65      2011-06-06 13:30:02
+
+simpleDatetimesCSV &lt;- read_csv(file.path(dataDir, &quot;datetimes-simple.csv&quot;), 
+    col_types = cols(
+      category = col_character(),
+      temp = col_number(),
+      datetime = col_character()
+    )
+  ) %&gt;%
+  # Set the time zone of datetimes
+  mutate(
+    datetime = parse_datetime(datetime, locale = locale(tz = &quot;America/Los_Angeles&quot;))
+  )
+
+simpleDatetimesCSV[1:3,]</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["category"],"name":[1],"type":["chr"],"align":["left"]},{"label":["temp"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["datetime"],"name":[3],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"cool","2":"55","3":"2011-06-04 09:30:00"},{"1":"warm","2":"60","3":"2011-06-05 09:30:01"},{"1":"warm","2":"65","3":"2011-06-06 13:30:02"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>simpleDatetimesCSV[[1,3]] %&gt;% tz()
+## [1] &quot;America/Los_Angeles&quot;</code></pre>
+<p><strong>Alternate Format</strong></p>
+<pre class="r"><code># category   temp     datetime
+# cool       55       Jun.4.2011 9:30
+# warm       60       Jun.5.2011 10:00
+# warm       65       Jun.6.2011 10:30
+
+altDatetimesCSV &lt;- read_csv(file.path(dataDir, &quot;datetimes-alt.csv&quot;), 
+    col_types = cols(
+      category = col_character(),
+      temp = col_number(),
+      datetime = col_character()
+    )
+  ) %&gt;%
+  # Set the time zone of datestimes
+  mutate(
+    datetime = parse_datetime(datetime, format = &quot;%b.%d.%Y %H:%M&quot;, locale = locale(tz = &quot;America/Los_Angeles&quot;))
+  )
+
+altDatetimesCSV[1:3,]</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["category"],"name":[1],"type":["chr"],"align":["left"]},{"label":["temp"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["datetime"],"name":[3],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"cool","2":"55","3":"2011-06-04 09:30:00"},{"1":"warm","2":"60","3":"2011-06-05 10:00:00"},{"1":"warm","2":"65","3":"2011-06-06 10:30:00"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>altDatetimesCSV[[1,3]] %&gt;% tz()
+## [1] &quot;America/Los_Angeles&quot;</code></pre>
+<p><strong>Numeric</strong></p>
+<pre class="r"><code># category   temp     datetime
+# cool       55       40698.401
+# warm       60       40699.442
+# warm       65       40700.483
+
+numericDatetimesCSV &lt;- read_csv(file.path(dataDir, &quot;datetimes-numeric.csv&quot;), 
+    col_types = cols(
+      category = col_character(),
+      temp = col_number(),
+      datetime = col_character()
+    )
+  ) %&gt;%
+  mutate(
+    # Using another library here because it's way easier
+    datetime = force_tz(openxlsx::convertToDateTime(datetime), tzone = &quot;America/Los_Angeles&quot;)
+  )
+
+numericDatetimesCSV[1:3,]</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["category"],"name":[1],"type":["chr"],"align":["left"]},{"label":["temp"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["datetime"],"name":[3],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"cool","2":"55","3":"2011-06-04 09:37:26"},{"1":"warm","2":"60","3":"2011-06-05 10:36:28"},{"1":"warm","2":"65","3":"2011-06-06 11:35:31"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>numericDatetimesCSV[[1,3]] %&gt;% tz()
+## [1] &quot;America/Los_Angeles&quot;</code></pre>
+<p><strong>Mixed Formats (No numerics)</strong></p>
+<pre class="r"><code># category   temp    datetime
+# cool       55      Jun.4.2011 10:30
+# warm       60      6/5/11 11:00 AM
+# warm       65      Jun.6.2011 10:30
+
+formats &lt;- c(&quot;%b.%d.%Y %H:%M&quot;, &quot;%m/%d/%y %I:%M %p&quot;)
+
+mixedDatetimesCSV &lt;- read_csv(file.path(dataDir, &quot;datetimes-mixed.csv&quot;), 
+    col_types = cols(
+      category = col_character(),
+      temp = col_number(),
+      datetime = col_character()
+    )
+  ) %&gt;%
+  mutate(
+    datetime = parse_date_time(datetime, orders = formats, tz = &quot;America/Los_Angeles&quot;)
+  )
+
+mixedDatetimesCSV[1:3,]</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["category"],"name":[1],"type":["chr"],"align":["left"]},{"label":["temp"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["datetime"],"name":[3],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"cool","2":"55","3":"2011-06-04 10:30:00"},{"1":"warm","2":"60","3":"2011-06-05 11:00:00"},{"1":"warm","2":"65","3":"2011-06-06 10:30:00"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>mixedDatetimesCSV[[1,3]] %&gt;% tz()
+## [1] &quot;America/Los_Angeles&quot;</code></pre>
+<p><strong>Mixed Formats (With numerics)</strong></p>
+<pre class="r"><code># category   temp    datetime
+# cool       55      40699.42
+# warm       60      6/5/11 10:30
+# warm       65      Jun.6.2011 10:30
+
+formats &lt;- c(&quot;%b.%d.%Y %H:%M&quot;, &quot;%m/%d/%y %H:%M&quot;)
+
+mixedNumericDatetimesCSV &lt;- read_csv(file.path(dataDir, &quot;datetimes-mixed-numeric.csv&quot;), 
+    col_types = cols(
+      category = col_character(),
+      temp = col_number(),
+      datetime = col_character()
+    )
+  ) %&gt;%
+  mutate(
+    # This will cause some warnings, so make sure everything parses correctly
+    datetime = if_else(
+      !is.na(force_tz(openxlsx::convertToDateTime(datetime), tzone = &quot;America/Los_Angeles&quot;)),
+      force_tz(openxlsx::convertToDateTime(datetime), tzone = &quot;America/Los_Angeles&quot;),
+      parse_date_time(datetime, orders = formats, tz = &quot;America/Los_Angeles&quot;)
+    )
+  )
+## Warning in openxlsx::convertToDateTime(datetime): NAs introduced by
+## coercion
+
+## Warning in openxlsx::convertToDateTime(datetime): NAs introduced by
+## coercion
+## Warning: 9 failed to parse.
+
+mixedNumericDatetimesCSV[1:3,]</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["category"],"name":[1],"type":["chr"],"align":["left"]},{"label":["temp"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["datetime"],"name":[3],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"cool","2":"55","3":"2011-06-05 10:00:28"},{"1":"warm","2":"60","3":"2011-06-05 10:30:00"},{"1":"warm","2":"65","3":"2011-06-06 10:30:00"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>mixedNumericDatetimesCSV[[1,3]] %&gt;% tz()
+## [1] &quot;America/Los_Angeles&quot;</code></pre>
+<p><strong>Base R</strong></p>
+<pre class="r"><code># category   temp    datetime
+# cool       55     2011-06-04 09:30:00
+# warm        60         2011-06-05 09:30:01
+# warm       65      2011-06-06 13:30:02
+
+simpleDatetimesCSVR &lt;- read.csv(file.path(dataDir, &quot;datetimes-simple.csv&quot;), 
+  header = TRUE,
+  colClasses = c(
+    &quot;character&quot;, 
+    &quot;numeric&quot;, 
+    &quot;POSIXct&quot;
+  )
+)
+
+simpleDatetimesCSVR[1:3,]</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["category"],"name":[1],"type":["chr"],"align":["left"]},{"label":["temp"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["datetime"],"name":[3],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"cool","2":"55","3":"2011-06-04 09:30:00","_rn_":"1"},{"1":"warm","2":"60","3":"2011-06-05 09:30:01","_rn_":"2"},{"1":"warm","2":"65","3":"2011-06-06 13:30:02","_rn_":"3"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>simpleDatetimesCSVR[[1,3]] %&gt;% tz() # No time zone
+## [1] &quot;&quot;
+
+simpleDatetimesCSVR &lt;- simpleDatetimesCSVR %&gt;%
+  mutate(
+    datetime = force_tz(datetime, tzone = &quot;America/Los_Angeles&quot;)
+  )
+
+simpleDatetimesCSVR[1:3,]</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["category"],"name":[1],"type":["chr"],"align":["left"]},{"label":["temp"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["datetime"],"name":[3],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"cool","2":"55","3":"2011-06-04 09:30:00","_rn_":"1"},{"1":"warm","2":"60","3":"2011-06-05 09:30:01","_rn_":"2"},{"1":"warm","2":"65","3":"2011-06-06 13:30:02","_rn_":"3"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>simpleDatetimesCSVR[[1,3]] %&gt;% tz()
+## [1] &quot;America/Los_Angeles&quot;</code></pre>
+</div>
+<div id="excel-1" class="section level3">
+<h3>Excel</h3>
+<p><strong>Basic</strong></p>
+<pre class="r"><code># category   temp    datetime
+# cool       55      6/4/11 9:30 AM
+# warm      60       6/4/11 10:30 AM
+# warm       65      6/4/11 11:30 AM
+
+simpleDatetimesXL &lt;- read_excel(file.path(dataDir, &quot;datetimes-simple.xlsx&quot;), 
+  col_types = c(
+    &quot;text&quot;,     # category
+    &quot;numeric&quot;,  # temp
+    &quot;date&quot;      # datetime
+  )
+)
+
+simpleDatetimesXL[1:3,]</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["category"],"name":[1],"type":["chr"],"align":["left"]},{"label":["temp"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["datetime"],"name":[3],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"cool","2":"55","3":"<NA>"},{"1":"warm","2":"60","3":"<NA>"},{"1":"warm","2":"65","3":"<NA>"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p><strong>Alternate Format</strong></p>
+<pre class="r"><code># category   temp    datetime
+# cool       55      Jun.4.2011 9:30
+# warm       60      Jun.5.2011 10:00
+# warm       65      Jun.6.2011 10:30
+
+altDatetimesXL &lt;- read_excel(file.path(dataDir, &quot;datetimes-alt.xlsx&quot;), 
+  col_types = c(
+    &quot;text&quot;,     # grade
+    &quot;numeric&quot;,  # class
+    &quot;date&quot;      # date
+  )
+)
+
+altDatetimesXL[1:3,]</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["category"],"name":[1],"type":["chr"],"align":["left"]},{"label":["temp"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["datetime"],"name":[3],"type":["S3: POSIXct"],"align":["right"]}],"data":[{"1":"cool","2":"55","3":"2011-06-04 09:30:00"},{"1":"warm","2":"60","3":"2011-06-05 10:00:00"},{"1":"warm","2":"65","3":"2011-06-06 10:30:00"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p><strong>Mixed Formats</strong></p>
+<pre class="r"><code># grade   class   date
+# A       2       43015
+# A       1       9.17.2016
+# D       1       6/6/17
+
+## Fails initial import
+mixedDatetimesXL &lt;- read_excel(file.path(dataDir, &quot;dates-mixed.xlsx&quot;), 
+  col_types = c(
+    &quot;text&quot;,     # grade
+    &quot;numeric&quot;,  # class
+    &quot;date&quot;      # date
+  )
+)
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Coercing numeric to date C2 / R2C3
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Expecting date in C3 / R3C3: got '9.17.2016'
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Coercing numeric to date C5 / R5C3
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Coercing numeric to date C6 / R6C3
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Coercing numeric to date C7 / R7C3
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Coercing numeric to date C8 / R8C3
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Coercing numeric to date C9 / R9C3
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Coercing numeric to date C10 / R10C3
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Expecting date in C11 / R11C3: got '9.17.2016'
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Expecting date in C12 / R12C3: got '7.26.2015'
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Expecting date in C13 / R13C3: got '7.10.2016'
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Expecting date in C14 / R14C3: got '12.29.2015'
+## Warning in read_fun(path = enc2native(normalizePath(path)), sheet_i =
+## sheet, : Expecting date in C15 / R15C3: got '2.20.2015'
+
+## Result
+# grade   class   date
+# A       2       2017-10-07
+# A       1       NA
+# D       1       2017-06-06
+
+## Try again, but bring in the date column as a character...
+mixedDatetimesXL &lt;- read_excel(file.path(dataDir, &quot;dates-mixed.xlsx&quot;), 
+  col_types = c(
+    &quot;text&quot;,     # grade
+    &quot;numeric&quot;,  # class
+    &quot;text&quot;      # date
+  )
+)
+
+## ...then try to parse your dates with a case_when syntax.
+
+mixedDatetimesXL &lt;- mixedDatesXL %&gt;%
+  mutate(
+    date = case_when(
+      !is.na(as_date(date, &quot;%m.%d.%Y&quot;, tz = &quot;&quot;)) ~ as_date(date, &quot;%m.%d.%Y&quot;, tz = &quot;&quot;),
+      !is.na(as_date(date, &quot;%m/%d/%y&quot;, tz = &quot;&quot;)) ~ as_date(date, &quot;%m/%d/%y&quot;, tz = &quot;&quot;),
+      TRUE ~ as_date(as.numeric(date), origin = &quot;1899-12-30&quot;)
+      # TRUE ~ as_datetime(as.numeric(date), origin = &quot;1904-01-01&quot;)
+    )
+  )
+
+mixedDatetimesXL[1:3,]</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["grade"],"name":[1],"type":["chr"],"align":["left"]},{"label":["class"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["date"],"name":[3],"type":["date"],"align":["right"]}],"data":[{"1":"A","2":"2","3":"2017-10-07"},{"1":"A","2":"1","3":"2016-09-17"},{"1":"D","2":"1","3":"2017-06-06"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+</div>
+<div id="calculating-1" class="section level2 tabset tabset-fade">
+<h2>Calculating</h2>
+<div id="rounding-1" class="section level3">
+<h3>Rounding</h3>
+<pre class="r"><code>normalDate &lt;- as_date(&quot;2014-02-28&quot;)
+
+## Round down
+floor_date(normalDate) 
+## [1] &quot;2014-02-28 UTC&quot;
+
+# Careful, because the default rounding unit is &quot;seconds&quot;, 
+# which converts date to POSIXct, with UTC timezone
+floor_date(normalDate) %&gt;% str()
+##  POSIXct[1:1], format: &quot;2014-02-28&quot;
+floor_date(normalDate) %&gt;% tz()
+## [1] &quot;UTC&quot;
+
+# Choices for explicit rounding 
+# second, minute, hour, day, week, month, bimonth, quarter, season, halfyear, year
+
+# Round down
+floor_date(normalDate, unit = &quot;month&quot;)
+## [1] &quot;2014-02-01&quot;
+floor_date(normalDate, unit = &quot;year&quot;)
+## [1] &quot;2014-01-01&quot;
+
+## Round up
+ceiling_date(normalDate, unit = &quot;month&quot;)
+## [1] &quot;2014-03-01&quot;
+ceiling_date(normalDate, unit = &quot;year&quot;) 
+## [1] &quot;2015-01-01&quot;
+
+## General round
+round_date(normalDate, unit = &quot;month&quot;)
+## [1] &quot;2014-03-01&quot;
+round_date(normalDate, unit = &quot;year&quot;)
+## [1] &quot;2014-01-01&quot;
+
+## To bigger units
+round_date(normalDate, unit = &quot;10 years&quot;)
+## [1] &quot;2010-01-01&quot;
+
+## Base R
+# Only available for POSIXct, so if you must do this
+# with your date object in base R, coerce it
+# Choices: secs, mins, hours, days, months, years
+
+## General round and round down
+round(as.POSIXct(normalDate), &quot;months&quot;)
+## [1] &quot;2014-03-01 PST&quot;
+trunc(as.POSIXct(normalDate), &quot;months&quot;)
+## [1] &quot;2014-02-01 PST&quot;</code></pre>
+</div>
+<div id="adjusting-in-calendar-time-1" class="section level3">
+<h3>Adjusting in calendar time</h3>
+<pre class="r"><code>normalDate &lt;- as_date(&quot;2014-02-28&quot;)
+leapYear &lt;- as_date(&quot;2016-02-28&quot;)
+enterDST &lt;- as_date(&quot;2019-03-09&quot;)
+exitDST &lt;- as_date(&quot;2019-11-02&quot;)
+
+normalDate + days(1) # We are adding &quot;periods&quot;, which represent human time
+## [1] &quot;2014-03-01&quot;
+normalDate + weeks(1)
+## [1] &quot;2014-03-07&quot;
+normalDate + months(1)
+## [1] &quot;2014-03-28&quot;
+normalDate + years(1)
+## [1] &quot;2015-02-28&quot;
+
+leapYear + days(1) # Notice periods are smart enough to handle Feb 29
+## [1] &quot;2016-02-29&quot;
+leapYear + weeks(1)
+## [1] &quot;2016-03-06&quot;
+leapYear + months(1)
+## [1] &quot;2016-03-28&quot;
+leapYear + years(1)
+## [1] &quot;2017-02-28&quot;
+
+enterDST + days(1)
+## [1] &quot;2019-03-10&quot;
+enterDST + weeks(1)
+## [1] &quot;2019-03-16&quot;
+enterDST + months(1)
+## [1] &quot;2019-04-09&quot;
+enterDST + years(1)
+## [1] &quot;2020-03-09&quot;
+
+exitDST + days(1)
+## [1] &quot;2019-11-03&quot;
+exitDST + weeks(1)
+## [1] &quot;2019-11-09&quot;
+exitDST + months(1)
+## [1] &quot;2019-12-02&quot;
+exitDST + years(1)
+## [1] &quot;2020-11-02&quot;
+
+## Gives us a date back
+str(normalDate + days(1))
+##  Date[1:1], format: &quot;2014-03-01&quot;</code></pre>
+</div>
+<div id="adjusting-in-physical-time-1" class="section level3">
+<h3>Adjusting in physical time</h3>
+<pre class="r"><code>normalDate + years(1) # This is with a period, as before.
+## [1] &quot;2015-02-28&quot;
+normalDate + dyears(1) # This is with a &quot;duration&quot;, which is always stored in second. Here there is no difference from the answer above, because dyears represent the average 
+## [1] &quot;2015-02-28&quot;
+
+leapYear + years(1) # Period.
+## [1] &quot;2017-02-28&quot;
+leapYear + dyears(1) # Duration. This only gets us part of the way there because we added an exact duration of the average year, which is less than the 366 days in this leap year
+## [1] &quot;2017-02-27&quot;
+
+## TAKEWAY: Use periods for calendar time (e.g. days), and durations for physical time (e.g. ddays)</code></pre>
+</div>
+<div id="classes-for-storing-time-difference-1" class="section level3">
+<h3>Classes for storing time difference</h3>
+<pre class="r"><code>normalDate_later &lt;- as_date(&quot;2014-03-02&quot;) # from 2014-02-28
+leapYear_later &lt;- as_date(&quot;2016-03-02&quot;) # from 2016-02-28
+enterDST_later &lt;- as_date(&quot;2019-03-11&quot;) # from 2019-03-09
+exitDST_later &lt;- as_date(&quot;2019-11-04&quot;) # from 2019-11-02
+
+# (1) Difftime -&gt; Base R class in undetermined units (below gives us days)
+# The units can change depending on the dates/times used
+(normalDate_later - normalDate) %&gt;% str()
+##  'difftime' num 2
+##  - attr(*, &quot;units&quot;)= chr &quot;days&quot;
+difftime(normalDate_later, normalDate) %&gt;% str() # Longhand version, but notice that end date comes first, which is strange to me
+##  'difftime' num 2
+##  - attr(*, &quot;units&quot;)= chr &quot;days&quot;
+
+# (2) Duration -&gt; Lubridate class in seconds
+# Basically the same as difftime, but never changes from seconds.
+as.duration(normalDate_later - normalDate) %&gt;% str()
+## Formal class 'Duration' [package &quot;lubridate&quot;] with 1 slot
+##   ..@ .Data: num 172800
+
+# (3) Interval -&gt; Lubridate class that stores two dates in one
+# Can use several utitliy functions specific to this class for determining relationships
+# between dates (e.g. %within%)
+interval(normalDate, normalDate_later) %&gt;% str()
+## Formal class 'Interval' [package &quot;lubridate&quot;] with 3 slots
+##   ..@ .Data: num 172800
+##   ..@ start: POSIXct[1:1], format: &quot;2014-02-28&quot;
+##   ..@ tzone: chr &quot;UTC&quot;</code></pre>
+</div>
+<div id="calculating-time-difference-1" class="section level3">
+<h3>Calculating time difference</h3>
+<pre class="r"><code>## Difftime ------------------------------------------------------------------------------
+
+# Shorthand
+(normalDate_later - normalDate) %&gt;% time_length(&quot;second&quot;)
+## [1] 172800
+(normalDate_later - normalDate) %&gt;% time_length(&quot;minute&quot;)
+## [1] 2880
+(normalDate_later - normalDate) %&gt;% time_length(&quot;hour&quot;)
+## [1] 48
+(normalDate_later - normalDate) %&gt;% time_length(&quot;day&quot;)
+## [1] 2
+# WARNING: Do not use units higher than week because they have ambiguous lengths.
+# For example, one month may be 28, 29, 30, or 31 days long.
+
+(leapYear_later - leapYear) %&gt;% time_length(&quot;day&quot;) # Note this is 3 days because of leap year
+## [1] 3
+(enterDST_later - enterDST) %&gt;% time_length(&quot;day&quot;)
+## [1] 2
+(exitDST_later - exitDST) %&gt;% time_length(&quot;day&quot;)
+## [1] 2
+
+# Longhand
+difftime(normalDate, normalDate_later) %&gt;% str()
+##  'difftime' num -2
+##  - attr(*, &quot;units&quot;)= chr &quot;days&quot;
+
+## Durations ------------------------------------------------------------------------------
+as.duration(normalDate_later - normalDate) %&gt;% time_length(&quot;second&quot;)
+## [1] 172800
+as.duration(normalDate_later - normalDate) %&gt;% time_length(&quot;minute&quot;)
+## [1] 2880
+as.duration(normalDate_later - normalDate) %&gt;% time_length(&quot;hour&quot;)
+## [1] 48
+as.duration(normalDate_later - normalDate) %&gt;% time_length(&quot;day&quot;)
+## [1] 2
+# WARNING: Do not use units higher than week because they have ambiguous lengths.
+# For example, one month may be 28, 29, 30, or 31 days long.
+
+as.duration(leapYear_later - leapYear) %&gt;% time_length(&quot;day&quot;) # Note this is 3 days because of leap year
+## [1] 3
+as.duration(enterDST_later - enterDST) %&gt;% time_length(&quot;day&quot;)
+## [1] 2
+as.duration(exitDST_later - exitDST) %&gt;% time_length(&quot;day&quot;)
+## [1] 2
+
+## Intervals ------------------------------------------------------------------------------
+# Note the order is flipped for intervals, with starting date first
+interval(normalDate, normalDate_later) %&gt;% time_length(&quot;second&quot;)
+## [1] 172800
+interval(normalDate, normalDate_later) %&gt;% time_length(&quot;minute&quot;)
+## [1] 2880
+interval(normalDate, normalDate_later) %&gt;% time_length(&quot;hour&quot;)
+## [1] 48
+interval(normalDate, normalDate_later) %&gt;% time_length(&quot;day&quot;)
+## [1] 2
+# WARNING: Units higher than week give &quot;accurate&quot; results for calendar time, but do not reflect
+# correct physical time difference. See examples below.
+
+interval(leapYear, leapYear_later) %&gt;% time_length(&quot;day&quot;) # Note this is 3 days because of leap year
+## [1] 3
+interval(enterDST, enterDST_later) %&gt;% time_length(&quot;day&quot;)
+## [1] 2
+interval(exitDST, exitDST_later) %&gt;% time_length(&quot;day&quot;)
+## [1] 2
+
+## Other option with Base R ---------------------------------------------------------------
+# Choices: secs, mins, hours, days
+normalDate_later - normalDate %&gt;% as.numeric(&quot;secs&quot;) 
+## [1] &quot;1970-01-03&quot;
+normalDate_later - normalDate %&gt;% as.numeric(&quot;mins&quot;)
+## [1] &quot;1970-01-03&quot;
+normalDate_later - normalDate %&gt;% as.numeric(&quot;hours&quot;)
+## [1] &quot;1970-01-03&quot;
+normalDate_later - normalDate %&gt;% as.numeric(&quot;days&quot;)
+## [1] &quot;1970-01-03&quot;
+
+leapYear_later - leapYear %&gt;% as.numeric(&quot;days&quot;) # Note this is 3 days because of leap year
+## [1] &quot;1970-01-04&quot;
+enterDST_later - enterDST %&gt;% as.numeric(&quot;days&quot;)
+## [1] &quot;1970-01-03&quot;
+exitDST_later - exitDST %&gt;% as.numeric(&quot;days&quot;)
+## [1] &quot;1970-01-03&quot;
+
+## TAKEAWAY: All methods are fine for calculating physical time differences in units less than a week. Do not use units greater than a week if the goal is precision.
+
+## Units higher than week -------------------------------------------------------------------
+# There may be times when you need to use units higher than a week. For example, you might wonder
+# how old a meter is in months or years. In these cases, just realize that it doesn't mean much to say how 
+# old something is in those units, because they change depending on the year.
+
+# An example to make the point
+
+normalFebStart &lt;- as_date(&quot;2014-02-01&quot;)
+normalFebEnd &lt;- as_date(&quot;2014-03-01&quot;)
+leapFebStart &lt;- as_date(&quot;2016-02-01&quot;)
+leapFebEnd &lt;- as_date(&quot;2016-03-01&quot;)
+
+(normalFebEnd - normalFebStart) %&gt;% time_length(&quot;month&quot;)
+## [1] 0.9205479
+(leapFebEnd - leapFebStart) %&gt;% time_length(&quot;month&quot;)
+## [1] 0.9534247
+as.duration(normalFebEnd - normalFebStart) %&gt;% time_length(&quot;month&quot;)
+## [1] 0.9205479
+as.duration(leapFebEnd - leapFebStart) %&gt;% time_length(&quot;month&quot;)
+## [1] 0.9534247
+interval(normalFebStart, normalFebEnd) %&gt;% time_length(&quot;month&quot;)
+## [1] 1
+interval(leapFebStart, leapFebEnd) %&gt;% time_length(&quot;month&quot;) # Notice this is &quot;correct&quot;, but not necessarily accurate. We know that this month is 29 days, but the previous month was 28 days. Why is the answer the same? A human would be happy, but a robot would be mad.
+## [1] 1</code></pre>
+</div>
+<div id="extracting-components-1" class="section level3">
+<h3>Extracting Components</h3>
+<pre class="r"><code>normalDate &lt;- as_date(&quot;2014-02-28&quot;)
+
+mday(normalDate)
+## [1] 28
+wday(normalDate)
+## [1] 6
+wday(normalDate, label = TRUE)
+## [1] Fri
+## Levels: Sun &lt; Mon &lt; Tue &lt; Wed &lt; Thu &lt; Fri &lt; Sat
+wday(normalDate, label = TRUE, abbr = FALSE)
+## [1] Friday
+## 7 Levels: Sunday &lt; Monday &lt; Tuesday &lt; Wednesday &lt; Thursday &lt; ... &lt; Saturday
+month(normalDate)
+## [1] 2
+month(normalDate, label = TRUE)
+## [1] Feb
+## 12 Levels: Jan &lt; Feb &lt; Mar &lt; Apr &lt; May &lt; Jun &lt; Jul &lt; Aug &lt; Sep &lt; ... &lt; Dec
+month(normalDate, label = TRUE, abbr = FALSE)
+## [1] February
+## 12 Levels: January &lt; February &lt; March &lt; April &lt; May &lt; June &lt; ... &lt; December
+year(normalDate)
+## [1] 2014</code></pre>
+</div>
+<div id="common-tasks-1" class="section level3">
+<h3>Common Tasks</h3>
+<p><em>Sequence of timestamps</em></p>
+</div>
+</div>
+</div>
+<div id="formatting-for-labels" class="section level1 tabset tabset-fade">
+<h1>Formatting for labels</h1>
 <div id="common" class="section level2">
 <h2>Common</h2>
+<pre class="r"><code># Lubridate
+# paste()
+
+# Scales
+# date_format()
+
+# Base R
+# format()
+# strftime()</code></pre>
 </div>
 <div id="advanced-labels" class="section level2">
 <h2>Advanced Labels</h2>
-</div>
-<div id="base-r" class="section level2">
-<h2>Base R</h2>
+<pre class="r"><code># stamp_date()
+# stamp_datetime()</code></pre>
 </div>
 </div>
 
