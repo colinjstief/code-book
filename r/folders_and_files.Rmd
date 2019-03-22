@@ -3,50 +3,73 @@ title: "Basic - Folders and Files"
 output:
   html_document:
     df_print: paged
+    toc: yes
 editor_options: 
   chunk_output_type: console
 ---
 
-### Setup
-#### Specify folder for Windows and Mac
+<style type = "text/css">h1.title { font-size: 32px;} h1 { font-size: 24px;} h2 { font-size: 20px; } h3 { font-size: 16px; }</style>
+
+```{r include = FALSE}
+## Setting global chunk options
+knitr::opts_chunk$set(collapse = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Workspace and Other Setup {.tabset .tabset-fade}
+## Packages & Settings
+```{r results = "hide"}
+library(wso)
+library(tidyverse)
+wso::util.settings()
+```
+
+## Directories and Files
 ```{r}
-if (.Platform.type == "windows") {
+if (.Platform$OS.type == "windows") {
   stop("Please define your directory for Windows, then delete this line.")
   # baseDir <- "G:\Team Drives\WSO USA - Projects\000 - Project"
 } else {
-  stop("Please define your directory for Mac, then delete this line.")
-  # baseDir <- "/Volumes/GoogleDrive/Team Drives/WSO USA - Projects/000 - Project"
+  baseDir <- "~/Desktop/GitHub/code-book/r"
+}
+
+dataDir <- file.path(baseDir, "_data")
+```
+
+# Listing
+```{r}
+# All files and folders
+list.files(dataDir)
+list.files(dataDir, full.names = TRUE)
+list.files(dataDir, recursive = TRUE)
+list.dirs(dataDir)
+
+## By pattern
+list.files(dataDir, recursive = TRUE, pattern = ".kml")
+list.files(dataDir, recursive = TRUE, pattern = "\\.kml$")
+list.files(dataDir, recursive = TRUE, pattern = "^[d]")
+
+## Limit to certain subdirectories
+searchPaths <- c(
+  file.path(dataDir, "geo"),
+  file.path(dataDir, "dates")
+)
+list.files(searchPaths, recursive = TRUE, full.names = TRUE)
+
+
+searchPaths <- Sys.glob(
+  file.path(dataDir, "images", "[C]*") # Search folders that start with "C"
+)
+list.files(searchPaths, recursive = TRUE, full.names = TRUE)
+```
+
+# Looping
+```{r}
+## Loop through items in a vector
+kmls <- list.files(dataDir, recursive = TRUE, pattern = ".kml")
+for (shape in kmls) {
+  print(shape)
 }
 ```
-
-### List
-#### List files in folder
-```{r}
-
-```
-
-#### List files in folder by pattern
-```{r}
-
-```
-
-### Loop
-#### Loop through files in folder
-```{r}
-
-```
-
-### Loop
-#### Loop through files in folder by pattern
-```{r}
-
-```
-
-<span style="
-  display: inline-block;
-  height: 100px;
-  width: 100%;
-"></span>
 
 
 

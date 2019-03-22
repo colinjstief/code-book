@@ -32,7 +32,7 @@ if (.Platform$OS.type == "windows") {
   baseDir <- "~/Desktop/GitHub/code-book/r"
 }
 
-dataDir <- file.path(baseDir, "_data")
+dataDir <- file.path(baseDir, "_data", "dates")
 ```
 
 # Dates
@@ -379,20 +379,20 @@ mixedNumericDatesXL[[1,3]]
 ```{r}
 normalDate <- as_date("2014-02-28")
 
-## Round down
-floor_date(normalDate) 
-
-# Careful, because the default rounding unit is "seconds", 
-# which converts date to POSIXct, with UTC timezone
-floor_date(normalDate) %>% str()
-floor_date(normalDate) %>% tz()
-
 # Choices for explicit rounding 
 # second, minute, hour, day, week, month, bimonth, quarter, season, halfyear, year
 
 # Round down
 floor_date(normalDate, unit = "month")
 floor_date(normalDate, unit = "year")
+
+# Careful, because the default rounding unit is "seconds", 
+# which converts date to POSIXct, with UTC timezone
+floor_date(normalDate) %>% str()
+floor_date(normalDate) %>% tz()
+
+floor_date(normalDate, unit = "month") %>% str()
+floor_date(normalDate, unit = "month") %>% tz()
 
 ## Round up
 ceiling_date(normalDate, unit = "month")
@@ -419,6 +419,7 @@ trunc(as.POSIXct(normalDate), "months")
 ```{r}
 normalDate <- as_date("2014-02-28")
 leapYear <- as_date("2016-02-28")
+leapDay <- as_date("2016-02-29")
 enterDST <- as_date("2019-03-09")
 exitDST <- as_date("2019-11-02")
 
@@ -431,6 +432,15 @@ leapYear + days(1) # Notice periods are smart enough to handle Feb 29
 leapYear + weeks(1)
 leapYear + months(1)
 leapYear + years(1)
+
+leapDay + days(1) 
+leapDay + weeks(1)
+leapDay + months(1)
+leapDay + years(1) # But not so smart to nicely handle this situation. 
+leapDay + dyears(1) # There is no February 29 a year later, so we need to use dyears
+leapDay + days(364)
+leapDay + days(365)
+leapDay + days(366)
 
 enterDST + days(1)
 enterDST + weeks(1)
@@ -454,7 +464,9 @@ normalDate + dyears(1) # This is with a "duration", which is always stored in se
 leapYear + years(1) # Period.
 leapYear + dyears(1) # Duration. This only gets us part of the way there because we added an exact duration of the average year, which is less than the 366 days in this leap year
 
-## TAKEWAY: Use periods for calendar time (e.g. days), and durations for physical time (e.g. ddays)
+leapDay + years(1) # Period. Doesn't work here.
+leapDay + dyears(1) # This does, but we got lucky because the math works out (see previous example).
+
 ```
 
 ### Classes for storing time difference
@@ -602,7 +614,7 @@ testEnd <- as_date("2017-04-30")
 ### Strings
 ```{r}
 as_datetime("2011-06-04 11:30:00")
-as_datetime("2011-06-04 11:30:00", tz = "America/Los_Angeles")
+as_datetime("2011-06-04 11:30:00", tz = "US/Pacific")
 as_datetime("June/4/11 11:30 PM", format = "%B/%d/%y %I:%M %p")
 as_datetime("2011-06-04 11:30:00") %>% str()
 as_datetime("June/4/11 11:30", format = "%B/%d/%y %I:%M") %>% str() # This is POSIXlt... not sure why right now
@@ -610,21 +622,21 @@ as_datetime("2011-06-04 11:30:00") %>% tz() # Defaults to POSIXct in UTC
 
 # Shortcuts
 ymd_hms("2010-08-03 12:00:00")
-mdy_hms("06042011 12:00:00", tz = "America/Los_Angeles")
+mdy_hms("06042011 12:00:00", tz = "US/Pacific")
 dmy_hm("04/06/2011 12:00")
 dmy_h("04/06/2011 12")
 ymd_hms("2010-08-03 12:00:00") %>% str()
 ymd_hms("2010-08-03 12:00:00") %>% tz()
 
 parse_date_time("2011-06-04 11:30:00", "%Y-%m-%d $H:%M:%S") 
-parse_date_time(c("2011-06-04 11:30:00", "June/4/11 11:30 PM"), orders = c("%Y-%m-%d $H:%M:%S", "%B/%d/%y %I:%M %p"), tz = "America/Los_Angeles")
+parse_date_time(c("2011-06-04 11:30:00", "June/4/11 11:30 PM"), orders = c("%Y-%m-%d $H:%M:%S", "%B/%d/%y %I:%M %p"), tz = "US/Pacific")
 parse_date_time("2011-06-04 11:30:00", "%Y-%m-%d $H:%M:%S") %>% str()
 parse_date_time("2011-06-04 11:30:00", "%Y-%m-%d $H:%M:%S") %>% tz()
-parse_date_time("2011-06-04 11:30:00", "%Y-%m-%d $H:%M:%S", tz = "America/Los_Angeles") %>% tz()
+parse_date_time("2011-06-04 11:30:00", "%Y-%m-%d $H:%M:%S", tz = "US/Pacific") %>% tz()
 
 # Not Lubridate, but still from tidyverse (readr)
 parse_datetime("2011-06-04 11:30:00") 
-parse_datetime("2011-06-04 11:30:00", locale = locale(tz = "America/Los_Angeles")) 
+parse_datetime("2011-06-04 11:30:00", locale = locale(tz = "US/Pacific")) 
 parse_datetime("June/4/11 11:30 PM", format = "%B/%d/%y %I:%M %p") 
 parse_datetime("2011-06-04 11:30:00") %>% str() # Defaults to POSIXct
 parse_datetime("2011-06-04 11:30:00") %>% tz() # Defaults to UTC
@@ -632,7 +644,7 @@ parse_datetime("2011-06-04 11:30:00") %>% tz() # Defaults to UTC
 # Compare to Base R
 as.POSIXct("2011-06-04 11:30:00") # Notice PDT (my computer's time zone)
 as.POSIXct("2011-06-04 11:30:00", tz = "UTC")
-as.POSIXct("2011-06-04 11:30:00", tz = "America/Los_Angeles")
+as.POSIXct("2011-06-04 11:30:00", tz = "US/Pacific") 
 as.POSIXct("June/4/11 11:30 PM", format = "%B/%d/%y %I:%M %p") 
 as.POSIXct("June/4/11 11:30 PM", tryFormats = c("%B/%d/%y %I:%M %p", "%B/%d/%y %I:%M %p"))
 as.POSIXct("2011-06-04 11:30:00") %>% str()
@@ -640,7 +652,7 @@ as.POSIXct("2011-06-04 11:30:00") %>% tz() # Does not have a timezone set
 
 as.POSIXlt("2011-06-04 11:30:00") # Notice PDT (my computer's time zone)
 as.POSIXlt("2011-06-04 11:30:00", tz = "UTC")
-as.POSIXlt("2011-06-04 11:30:00", tz = "America/Los_Angeles")
+as.POSIXlt("2011-06-04 11:30:00", tz = "US/Pacific")
 as.POSIXlt("June/4/11 11:30 PM", format = "%B/%d/%y %I:%M %p") 
 as.POSIXlt("June/4/11 11:30 PM", tryFormats = c("%B/%d/%y %I:%M %p", "%B/%d/%y %I:%M %p"))
 as.POSIXlt("2011-06-04 11:30:00") %>% str()
@@ -648,13 +660,16 @@ as.POSIXlt("2011-06-04 11:30:00") %>% tz() # Does not have a timezone set
 
 strptime("2011-06-04 11:30:00", format = "%Y-%m-%d %I:%M:%S") # Notice PDT (my computer's time zone)
 strptime("2011-06-04 11:30:00", format = "%Y-%m-%d %I:%M:%S", tz = "UTC")
-strptime("2011-06-04 11:30:00", format = "%Y-%m-%d %I:%M:%S", tz = "America/Los_Angeles")
+strptime("2011-06-04 11:30:00", format = "%Y-%m-%d %I:%M:%S", tz = "US/Pacific")
 strptime("June/4/11 11:30 PM", format = "%B/%d/%y %I:%M %p")
 strptime("2011-06-04 11:30:00", format = "%Y-%m-%d %I:%M:%S") %>% str() # Creates POSIXlt
 strptime("2011-06-04 11:30:00", format = "%Y-%m-%d %I:%M:%S") %>% attr("tzone") # But this is null
 strptime("2011-06-04 11:30:00", format = "%Y-%m-%d %I:%M:%S") %>% tz() # UTC
 ## So we get a print of PDT, a NULL time zone attribute, and lubridate is telling us UTC...
-## Takeaway... specify the time zone to avoid ambiguity 
+
+## The tzone attribute controls how the date/time is printed, not what absolute time it refers to. If it is not set (as above) it defaults to your systems time zone (I'm on PDT right now). In this case, Lubridate knows the absolute time is in UTC, we don't have an attribute set, so it prints in PDT. 
+
+## Takeaway... specify the time zone to avoid ambiguity.
 
 # Invalid datetime
 as_datetime("2011-02-29 11:30:00", format = "%Y-%m-%d %I:%M:%S")
@@ -669,7 +684,7 @@ strptime("2011-02-29 11:30:00", format = "%Y-%m-%d %I:%M:%S")
 make_datetime(2011, 6, 2, 1, 1, 1)
 make_datetime(2011, 6, 2, 00, 00, 00)
 make_datetime(2011, 6, 2, 00, 00, 00, tz = "UTC")
-make_datetime(2011, 6, 2, 00, 00, 00, tz = "America/Los_Angeles")
+make_datetime(2011, 6, 2, 00, 00, 00, tz = "US/Pacific")
 make_datetime(2011, 6, 2, 1, 1, 1) %>% str()
 
 # Need to parse from string
@@ -711,7 +726,7 @@ simpleDatetimesCSV <- read_csv(file.path(dataDir, "datetimes-simple.csv"),
   ) %>%
   # Set the time zone of datetimes
   mutate(
-    datetime = parse_datetime(datetime, locale = locale(tz = "America/Los_Angeles"))
+    datetime = parse_datetime(datetime, locale = locale(tz = "US/Pacific"))
   )
 
 simpleDatetimesCSV[1:3,]
@@ -734,7 +749,7 @@ altDatetimesCSV <- read_csv(file.path(dataDir, "datetimes-alt.csv"),
   ) %>%
   # Set the time zone of datestimes
   mutate(
-    datetime = parse_datetime(datetime, format = "%b.%d.%Y %H:%M", locale = locale(tz = "America/Los_Angeles"))
+    datetime = parse_datetime(datetime, format = "%b.%d.%Y %H:%M", locale = locale(tz = "US/Pacific"))
   )
 
 altDatetimesCSV[1:3,]
@@ -758,7 +773,7 @@ numericDatetimesCSV <- read_csv(file.path(dataDir, "datetimes-numeric.csv"),
   mutate(
     ## Using another library here because it's way easier. But any way you shake it, there may
     ## be some seconds being messed with because of conversions
-    datetime = force_tz(openxlsx::convertToDateTime(datetime), tzone = "America/Los_Angeles")
+    datetime = force_tz(openxlsx::convertToDateTime(datetime), tzone = "US/Pacific")
   )
 
 numericDatetimesCSV[1:3,]
@@ -782,7 +797,7 @@ mixedDatetimesCSV <- read_csv(file.path(dataDir, "datetimes-mixed.csv"),
     )
   ) %>%
   mutate(
-    datetime = parse_date_time(datetime, orders = formats, tz = "America/Los_Angeles")
+    datetime = parse_date_time(datetime, orders = formats, tz = "US/Pacific")
   )
 
 mixedDatetimesCSV[1:3,]
@@ -808,9 +823,9 @@ mixedNumericDatetimesCSV <- read_csv(file.path(dataDir, "datetimes-mixed-numeric
   mutate(
     # This will cause some warnings, so make sure everything parses correctly
     datetime = if_else(
-      !is.na(force_tz(openxlsx::convertToDateTime(datetime), tzone = "America/Los_Angeles")),
-      force_tz(openxlsx::convertToDateTime(datetime), tzone = "America/Los_Angeles"),
-      parse_date_time(datetime, orders = formats, tz = "America/Los_Angeles")
+      !is.na(force_tz(openxlsx::convertToDateTime(datetime), tzone = "US/Pacific")),
+      force_tz(openxlsx::convertToDateTime(datetime), tzone = "US/Pacific"),
+      parse_date_time(datetime, orders = formats, tz = "US/Pacific")
     )
   )
 
@@ -839,7 +854,7 @@ simpleDatetimesCSVR[[1,3]] %>% tz() # No time zone
 
 simpleDatetimesCSVR <- simpleDatetimesCSVR %>%
   mutate(
-    datetime = force_tz(datetime, tzone = "America/Los_Angeles")
+    datetime = force_tz(datetime, tzone = "US/Pacific")
   )
 
 simpleDatetimesCSVR[1:3,]
@@ -862,7 +877,7 @@ simpleDatetimesXL <- read_excel(file.path(dataDir, "datetimes-simple.xlsx"),
     )
   ) %>%
   mutate(
-    datetime = parse_datetime(datetime, locale = locale(tz = "America/Los_Angeles"))
+    datetime = parse_datetime(datetime, locale = locale(tz = "US/Pacific"))
   )
 
 simpleDatetimesXL[1:3,]
@@ -885,7 +900,7 @@ altDatetimesXL <- read_excel(file.path(dataDir, "datetimes-alt.xlsx"),
   ) %>%  
   # Set the time zone of datestimes
   mutate(
-    datetime = parse_datetime(datetime, format = "%b.%d.%Y %H:%M", locale = locale(tz = "America/Los_Angeles"))
+    datetime = parse_datetime(datetime, format = "%b.%d.%Y %H:%M", locale = locale(tz = "US/Pacific"))
   )
 
 altDatetimesXL[1:3,]
@@ -909,7 +924,7 @@ numericDatetimesXL <- read_excel(file.path(dataDir, "datetimes-numeric.xlsx"),
   mutate(
     ## Using another library here because it's way easier. But any way you shake it, there may
     ## be some seconds being messed with because of conversions
-    datetime = force_tz(openxlsx::convertToDateTime(datetime), tzone = "America/Los_Angeles")
+    datetime = force_tz(openxlsx::convertToDateTime(datetime), tzone = "US/Pacific")
   )
 
 numericDatetimesXL[1:3,]
@@ -933,7 +948,7 @@ mixedDatetimesXL <- read_excel(file.path(dataDir, "datetimes-mixed.xlsx"),
     )
   ) %>%
   mutate(
-    datetime = parse_date_time(datetime, orders = formats, tz = "America/Los_Angeles")
+    datetime = parse_date_time(datetime, orders = formats, tz = "US/Pacific")
   )
 
 mixedDatetimesXL[1:3,]
@@ -959,9 +974,9 @@ mixedNumericDatetimesXL <- read_excel(file.path(dataDir, "datetimes-mixed-numeri
   mutate(
     # This will cause some warnings, so make sure everything parses correctly
     datetime = if_else(
-      !is.na(force_tz(openxlsx::convertToDateTime(datetime), tzone = "America/Los_Angeles")),
-      force_tz(openxlsx::convertToDateTime(datetime), tzone = "America/Los_Angeles"),
-      parse_date_time(datetime, orders = formats, tz = "America/Los_Angeles")
+      !is.na(force_tz(openxlsx::convertToDateTime(datetime), tzone = "US/Pacific")),
+      force_tz(openxlsx::convertToDateTime(datetime), tzone = "US/Pacific"),
+      parse_date_time(datetime, orders = formats, tz = "US/Pacific")
     )
   )
 
@@ -973,82 +988,110 @@ mixedNumericDatetimesXL[[1,3]] %>% tz()
 ### Rounding
 
 ```{r}
-normalDate <- as_date("2014-02-28")
-
-## Round down
-floor_date(normalDate) 
-
-# Careful, because the default rounding unit is "seconds", 
-# which converts date to POSIXct, with UTC timezone
-floor_date(normalDate) %>% str()
-floor_date(normalDate) %>% tz()
+normalDateTime <- as_datetime("2014-02-28 20:30:00")
+normalDateTimePDT <- as_datetime("2014-02-28 20:30:00", tz = "US/Pacific")
 
 # Choices for explicit rounding 
 # second, minute, hour, day, week, month, bimonth, quarter, season, halfyear, year
 
 # Round down
-floor_date(normalDate, unit = "month")
-floor_date(normalDate, unit = "year")
+floor_date(normalDateTime, unit = "hour")
+floor_date(normalDateTime, unit = "year")
 
 ## Round up
-ceiling_date(normalDate, unit = "month")
-ceiling_date(normalDate, unit = "year") 
+ceiling_date(normalDateTime, unit = "hour")
+ceiling_date(normalDateTime, unit = "year") 
 
 ## General round
-round_date(normalDate, unit = "month")
-round_date(normalDate, unit = "year")
+round_date(normalDateTime, unit = "hour")
+round_date(normalDateTime, unit = "year")
 
 ## To bigger units
-round_date(normalDate, unit = "10 years")
+round_date(normalDateTime, unit = "10 years")
 
 ## Base R
-# Only available for POSIXct, so if you must do this
-# with your date object in base R, coerce it
 # Choices: secs, mins, hours, days, months, years
 
 ## General round and round down
-round(as.POSIXct(normalDate), "months")
-trunc(as.POSIXct(normalDate), "months")
+round(normalDateTime, "months")
+trunc(normalDateTime, "months")
 ```
 
 ### Adjusting in calendar time
 ```{r}
-normalDate <- as_date("2014-02-28")
-leapYear <- as_date("2016-02-28")
-enterDST <- as_date("2019-03-09")
-exitDST <- as_date("2019-11-02")
+normalDateTime <- as_datetime("2014-02-28 11:30:00", tz = "US/Pacific")
+leapYearTime <- as_datetime("2016-02-28 11:30:00", tz = "US/Pacific")
+leapDayTime <- as_datetime("2016-02-29 11:30:00", tz = "US/Pacific")
+enterDSTTime_UTC <- as_datetime("2019-03-10 01:30:00")
+exitDSTTime_UTC <- as_datetime("2019-11-03 01:30:00")
+enterDSTTime_PDT <- as_datetime("2019-03-10 01:30:00", tz = "US/Pacific")
+exitDSTTime_PDT <- as_datetime("2019-11-03 01:30:00", tz = "US/Pacific")
 
-normalDate + days(1) # We are adding "periods", which represent human time
-normalDate + weeks(1)
-normalDate + months(1)
-normalDate + years(1)
+normalDateTime + seconds(1) # We are adding "periods", which represent human time
+normalDateTime + minutes(1)
+normalDateTime + hours(1)
+normalDateTime + days(1)
+normalDateTime + months(1)
 
-leapYear + days(1) # Notice periods are smart enough to handle Feb 29
-leapYear + weeks(1)
-leapYear + months(1)
-leapYear + years(1)
+leapYearTime + seconds(1)
+leapYearTime + minutes(1)
+leapYearTime + hours(1)
+leapYearTime + days(1)
+leapYearTime + months(1)
 
-enterDST + days(1)
-enterDST + weeks(1)
-enterDST + months(1)
-enterDST + years(1)
+leapDayTime + seconds(1)
+leapDayTime + minutes(1)
+leapDayTime + hours(1)
+leapDayTime + days(1)
+leapDayTime + months(1)
 
-exitDST + days(1)
-exitDST + weeks(1)
-exitDST + months(1)
-exitDST + years(1)
+enterDSTTime_UTC + seconds(1)
+enterDSTTime_UTC + minutes(1)
+enterDSTTime_UTC + hours(1)
+enterDSTTime_UTC + days(1)
+enterDSTTime_UTC + months(1)
 
-## Gives us a date back
-str(normalDate + days(1))
+exitDSTTime_UTC + seconds(1)
+exitDSTTime_UTC + minutes(1)
+exitDSTTime_UTC + hours(1)
+exitDSTTime_UTC + days(1)
+exitDSTTime_UTC + months(1)
+
+enterDSTTime_PDT + seconds(1)
+enterDSTTime_PDT + minutes(1)
+enterDSTTime_PDT + hours(1)
+enterDSTTime_PDT + days(1)
+enterDSTTime_PDT + months(1)
+
+exitDSTTime_PDT + seconds(1)
+exitDSTTime_PDT + minutes(1)
+exitDSTTime_PDT + hours(1)
+exitDSTTime_PDT + days(1)
+exitDSTTime_PDT + months(1)
+
+## Gives us a datetime back
+str(normalDateTime + days(1))
+
+## Test in a tibble with enterDSTTime
+testTibble <- tibble(
+  beforeDST = c(enterDSTTime_UTC),
+  beforeDST_tz = c(enterDSTTime_PDT),
+  inDST_hour = beforeDST + hours(1),
+  inDST_dhour = beforeDST + dhours(1),
+  inDST_tz_hour = beforeDST_tz + hours(1),
+  inDST_tz_dhour = beforeDST_tz + dhours(1)
+)
+testTibble
+testTibble %>% wso::style.makeTable()
 ```
 
 ### Adjusting in physical time
 ```{r}
-normalDate + years(1) # This is with a period, as before.
-normalDate + dyears(1) # This is with a "duration", which is always stored in second. Here there is no difference from the answer above, because dyears represent the average 
+normalDateTime + years(1) # This is with a period, as before.
+normalDateTime + dyears(1) # This is with a "duration", which is always stored in second. Here there is no difference from the answer above, because dyears represent the average 
 
-leapYear + years(1) # Period.
-leapYear + dyears(1) # Duration. This only gets us part of the way there because we added an exact duration of the average year, which is less than the 366 days in this leap year
+leapYearTime + years(1) # Period.
+leapYearTime + dyears(1) # Duration. This only gets us part of the way there because we added an exact duration of the average year, which is less than the 366 days in this leap year
 
 ## TAKEWAY: Use periods for calendar time (e.g. days), and durations for physical time (e.g. ddays)
 ```

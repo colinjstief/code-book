@@ -1,0 +1,183 @@
+---
+title: "Basic - Iteration"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+<style type = "text/css">h1.title { font-size: 32px;} h1 { font-size: 24px;} h2 { font-size: 20px; } h3 { font-size: 16px; }</style>
+
+```{r include = FALSE}
+## Setting global chunk options
+knitr::opts_chunk$set(collapse = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Workspace and Other Setup {.tabset .tabset-fade}
+## Packages & Settings
+```{r results = "hide"}
+library(wso)
+library(tidyverse)
+wso::util.settings()
+```
+
+## Directories and Files
+```{r}
+if (.Platform$OS.type == "windows") {
+  stop("Please define your directory for Windows, then delete this line.")
+  # baseDir <- "G:\\Team Drives\\WSO USA - Projects\\000 - Project"
+} else {
+  baseDir <- "~/Desktop/GitHub/code-book/r"
+}
+
+dataDir <- file.path(baseDir, "_data")
+```
+
+# For Loops
+## Basics
+```{r}
+df <- tibble(
+  a = rnorm(10),
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10)
+)
+
+# Without pre-allocation (a)
+startTime <- Sys.time()
+
+for (i in seq_along(df)) {            # 1. sequence
+  print(median(df[[i]]))              # 2. body
+}
+Sys.time() - startTime
+
+# Without pre-allocation (b)
+startTime <- Sys.time()
+output <- c()
+for (i in seq_along(df)) {            # 1. sequence
+  output <- append(output,  median(df[[i]]))    # 2. body
+}
+Sys.time() - startTime
+output
+
+# With pre-allocation
+startTime <- Sys.time()
+output <- vector("double", ncol(df))  # 1. output
+for (i in seq_along(df)) {            # 2. sequence
+  output[[i]] <- median(df[[i]])      # 3. body
+}
+Sys.time() - startTime
+output
+```
+
+## Modifying an existing object, instead of creating a new object.
+```{r}
+mtcarsLite <- mtcars[1:10, 1:2]
+print(mtcarsLite)
+
+multiplyFunction <- function(vector) {
+  newVector <- vector * 100
+  return(newVector)
+}
+
+for (index in seq_along(mtcarsLite)) {
+  mtcarsLite[[index]] <- multiplyFunction(mtcarsLite[[index]])
+}
+print(mtcarsLite)
+```
+
+## Ways to loop over a vector
+```{r}
+mtcarsLite <- mtcars[1:10, 1:2]
+
+# With indices
+for (index in seq_along(mtcarsLite)) {
+  print(mtcarsLite[index]) # Gives the df column
+  print(mtcarsLite[[index]]) # Gives the atomic vector
+}
+
+# With names
+for (colName in names(mtcarsLite)) {
+  print(colName)
+  print(mtcarsLite[colName]) # Gives the df column
+  print(mtcarsLite[[colName]]) # Gives the atomic vector
+}
+
+# With elements
+for (column in mtcarsLite) {
+  print(column) # Gives atomic vector
+}
+```
+
+## Handling outputs of unknown length.
+Instead of this...
+```{r}
+numbers <- 1:5000
+
+startTime <- Sys.time()
+output <- c()
+
+for (index in seq_along(numbers)) {
+  randNum <- sample(100, 1)
+  vectorToAdd <- rnorm(randNum, numbers[[index]])
+  output <- append(output, vectorToAdd)
+}
+
+Sys.time() - startTime
+str(output)
+```
+
+...you should do this
+```{r}
+numbers <- 1:5000
+
+startTime <- Sys.time()
+output <- vector("list", length(numbers))
+
+for (index in seq_along(numbers)) {
+  randNum <- sample(100, 1)
+  vectorToAdd <- rnorm(randNum, numbers[[index]])
+  output[[index]] <- vectorToAdd
+}
+output <- unlist(output)
+Sys.time() - startTime
+str(output)
+```
+
+
+# Vectorization
+As the word suggest, vectorization is the operation of converting repeated operations on simple numbers (“scalars”) into single operations on vectors or matrices. 
+
+Now, a vector is the elementary data structure in R and is “a single entity consisting of a collection of things”, according to the R base manual.
+
+So, a collection of numbers is a numeric vector.
+
+If you combine vectors (of the same length), you obtain a matrix. You can do this vertically or horizontally, using different R instructions. Thus in R, a matrix is seen as a collection of horizontal or vertical vectors. By extension, you can vectorize repeated operations on vectors.
+
+Many of the above loop constructs can be made implicit by using vectorization.
+
+I say “implicit”, because they do not really disappear. At a lower level, the alternative vectorized form translates into code which will contain one or more loops in the lower level language the form was implemented and compiled (Fortran, C, or C++ ).
+
+These are hidden to the user and are usually faster than the equivalent explicit R code, but unless you’re planning to implement your own R functions using one of those languages, this is totally transparent to you.
+
+Compare this for loop...
+```{r}
+v1 <- c(1, 2, 3, 4)
+v2 <- c(10, 20, 30, 40)
+v3 <- c()
+
+for (index in 1:length(v1)) {
+  v3[index] <- v1[index] + v2[index]
+}
+
+v3
+```
+
+...to the vectorized equivalent
+```{r}
+v3b <- v1 + v2
+v3b
+```
+
