@@ -1,10 +1,4 @@
-# Gitignore
-node_modules/
-docs
-_reference
-bash/*
-!bash/git.sh
-!bash/renaming-file.sh
-!bash/unix.sh
+node_modules
+_projects
 .vscode
 .DS_Store
