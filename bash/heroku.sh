@@ -57,13 +57,3 @@ heroku config:unset KEY
 
 ## heroku logs
 heroku logs
-
-## Connecting to MongoDB database from Robo3T
-mongodb://heroku_62fkftnh:c3o5ii0ui1bp53b189aksh4mgr@ds121674.mlab.com:21674/heroku_62fkftnh
-mongodb://  heroku_62fkftnh : c3o5ii0ui1bp53b189aksh4mgr @ ds121674.mlab.com  21674  heroku_62fkftnh
-
-Address: ds121674.mlab.com
-Port: 21674
-Database: heroku_62fkftnh
-Username: heroku_62fkftnh
-Password: c3o5ii0ui1bp53b189aksh4mgr
